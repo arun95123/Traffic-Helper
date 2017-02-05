@@ -9,6 +9,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -33,17 +37,53 @@ import static com.example.arunkumar.traffichelper.R.string.google_maps_key;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    String getroutes= "http://192.168.1.6/getRoute.php";
+    double slatitude=10,slongitude=10,dlatitude=80,dlongitude=20;
+    GPSTracker gps;
+    String getroutes= "http://"+ MainActivity.appip+"/traffic/getRoute.php";
     ArrayList<Location> route=new ArrayList<Location>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        gps=new GPSTracker(MapsActivity.this);
+
+        if(gps.canGetLocation()) {
+
+            slatitude  = gps.getLatitude();
+            slongitude = gps.getLongitude();
+        }
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(map);
         mapFragment.getMapAsync(this);
+
+        PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
+                getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                // TODO: Get info about the selected place.
+
+                LatLng latLng=place.getLatLng();
+
+                dlatitude=latLng.latitude;
+                dlongitude=latLng.longitude;
+                // Log.i(TAG, "Place: " + place.getName());
+             //   Toast.makeText(GetDestination.this,"Place: " +latLng.latitude + " :" + latLng.longitude,Toast.LENGTH_SHORT).show();
+
+                new getroutes().execute();
+            }
+
+            @Override
+            public void onError(Status status) {
+                // TODO: Handle the error.
+             //   Toast.makeText(GetDestination.this,"Error"+ status.getStatusMessage(),Toast.LENGTH_LONG).show();
+                //Log.i(TAG, "An error occurred: " + status);
+            }
+        });
     }
 
 
@@ -92,11 +132,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(13.0930304, 80.2558812 );
+        LatLng sydney = new LatLng(slatitude, slongitude );
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
 
-        drawPrimaryLinePath(route);
+
+
+     //   drawPrimaryLinePath(route);
     }
 
     private void drawPrimaryLinePath( ArrayList<Location> listLocsToDraw )
@@ -144,11 +186,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             JSONObject jsonobject;
             final JSONParser jParser2 = new JSONParser();
+            if(gps.canGetLocation()) {
+
+                slatitude  = gps.getLatitude();
+                slongitude = gps.getLongitude();
+            }
             List<NameValuePair> params2 = new ArrayList<NameValuePair>();
-            params2.add(new BasicNameValuePair("slat", "" + latitude));
-            params2.add(new BasicNameValuePair("slong", "" + longitude ));
-            params2.add(new BasicNameValuePair("dlat", "" + latitude));
-            params2.add(new BasicNameValuePair("dlong", "" + longitude ));
+            params2.add(new BasicNameValuePair("slat", "" + 13.088210));
+            params2.add(new BasicNameValuePair("slong", "" + 80.176570 ));
+            params2.add(new BasicNameValuePair("dlat", "" + dlatitude));
+            params2.add(new BasicNameValuePair("dlong", "" + dlongitude));
 
             jsonobject = jParser2.makeHttpRequest(getroutes, "GET", params2);
 

@@ -27,7 +27,6 @@ public class MyService extends Service {
 
     private boolean isRunning  = false;
     double latitude=10,longitude=10;
-    String sendlocation="http://192.168.1.6/reportLocation.php";
     GPSTracker gps;
 
     int test=0;
@@ -111,6 +110,7 @@ public class MyService extends Service {
 
             JSONObject jsonobject;
             final JSONParser jParser2 = new JSONParser();
+            String sendlocation="http://"+ MainActivity.appip+"/traffic/reportLocation.php";
             List<NameValuePair> params2 = new ArrayList<NameValuePair>();
             params2.add(new BasicNameValuePair("lat", "" + latitude));
             params2.add(new BasicNameValuePair("long", "" + longitude ));
