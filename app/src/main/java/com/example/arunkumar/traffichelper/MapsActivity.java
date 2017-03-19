@@ -1,9 +1,14 @@
 package com.example.arunkumar.traffichelper;
 
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -37,21 +42,21 @@ import static com.example.arunkumar.traffichelper.R.string.google_maps_key;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    double slatitude=10,slongitude=10,dlatitude=80,dlongitude=20;
+    double slatitude = 10, slongitude = 10, dlatitude = 80, dlongitude = 20;
     GPSTracker gps;
-    String getroutes= "http://"+ MainActivity.appip+"/traffic/getRoute.php";
-    ArrayList<Location> route=new ArrayList<Location>();
+    String getroutes = "http://" + MainActivity.appip + "/traffic/getRoute.php";
+    ArrayList<Location> route = new ArrayList<Location>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
-        gps=new GPSTracker(MapsActivity.this);
+        gps = new GPSTracker(MapsActivity.this);
 
-        if(gps.canGetLocation()) {
+        if (gps.canGetLocation()) {
 
-            slatitude  = gps.getLatitude();
+            slatitude = gps.getLatitude();
             slongitude = gps.getLongitude();
         }
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -67,14 +72,52 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onPlaceSelected(Place place) {
                 // TODO: Get info about the selected place.
 
-                LatLng latLng=place.getLatLng();
+                LatLng latLng = place.getLatLng();
 
-                dlatitude=latLng.latitude;
-                dlongitude=latLng.longitude;
+                dlatitude = latLng.latitude;
+                dlongitude = latLng.longitude;
                 // Log.i(TAG, "Place: " + place.getName());
-             //   Toast.makeText(GetDestination.this,"Place: " +latLng.latitude + " :" + latLng.longitude,Toast.LENGTH_SHORT).show();
+                //   Toast.makeText(GetDestination.this,"Place: " +latLng.latitude + " :" + latLng.longitude,Toast.LENGTH_SHORT).show();
 
                 new getroutes().execute();
+
+
+                LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                if (ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    Toast.makeText(getApplicationContext(),"enable GPS",Toast.LENGTH_LONG).show();
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
+                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, new LocationListener() {
+
+                    @Override
+                    public void onProviderDisabled(String provider) {
+                        // TODO Auto-generated method stub
+                    }
+
+                    @Override
+                    public void onProviderEnabled(String provider) {
+                        // TODO Auto-generated method stub
+                    }
+
+                    @Override
+                    public void onLocationChanged(Location location) {
+                        Toast.makeText(getApplicationContext(),"GPS changed",Toast.LENGTH_LONG).show();
+                    }
+
+                    @Override
+                    public void onStatusChanged(String provider, int status,
+                                                Bundle extras) {
+                        // TODO Auto-generated method stub
+                    }
+                });
+
             }
 
             @Override
@@ -143,11 +186,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void drawPrimaryLinePath( ArrayList<Location> listLocsToDraw )
     {
+
         if ( mMap == null )
         {
             return;
         }
-
+        mMap.clear();
         if ( listLocsToDraw.size() < 2 )
         {
             return;
@@ -206,7 +250,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     JSONArray jsonarray = jsonobject.getJSONArray("result");
                     int len = jsonarray.length();
-
+                    route.clear();
                     for(int i =0;i<len;i++) {
                         JSONObject locaiton = jsonarray.getJSONObject(i);
 
