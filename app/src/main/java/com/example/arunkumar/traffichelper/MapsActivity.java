@@ -108,7 +108,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     @Override
                     public void onLocationChanged(Location location) {
-                        Toast.makeText(getApplicationContext(),"GPS changed",Toast.LENGTH_LONG).show();
+                   //     Toast.makeText(getApplicationContext(),"GPS changed",Toast.LENGTH_LONG).show();
                     }
 
                     @Override
@@ -287,6 +287,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             else{
                 Toast.makeText(MapsActivity.this,"success",Toast.LENGTH_SHORT).show();
                 drawPrimaryLinePath(route);
+                try {
+                    Thread.sleep(5000);
+                    new getroutes().execute();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
             }
         }
